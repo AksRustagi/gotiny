@@ -2,20 +2,23 @@
 
 #gotiny [![Build status][travis-img]][travis-url] [![License][license-img]][license-url] [![GoDoc][doc-img]][doc-url ] [![Go Report Card](https://goreportcard.com/badge/github.com/niubaoshu/gotiny)](https://goreportcard.com/report/github.com/niubaoshu/gotiny)
 Gotiny is an efficiency-oriented go language serialization library. Gotiny improves efficiency by pre-generating the encoder and reducing the use of the reflect library, almost as fast as the serialization library that generates the code.
+
 ## hello word
-    Package main
-    Import (
+```
+package main
+import (
    "fmt"
    "github.com/niubaoshu/gotiny"
-    )
+)
     
-    Func main() {
+func main() {
    src1, src2 := "hello", []byte(" world!")
    ret1, ret2 := "", []byte{}
-   encoder := gotiny.New(src1, src2)
-   encoder.Decode(encoder.Encode(&src1, &src2), &ret1, &ret2)
+   coder := gotiny.New(src1, src2)
+   coder.Decode(coder.Encode(&src1, &src2), &ret1, &ret2)
    fmt.Println(ret1 + string(ret2)) // print "hello world!"
-    }
+}
+```
 
 ## Features
 - The efficiency is very high, which is more than 3 times that of golang's own serialization library gob, which is at the same level and even higher than the general generated code serialization framework.
@@ -30,9 +33,11 @@ Gotiny is an efficiency-oriented go language serialization library. Gotiny impro
 – Threadsafe, once created scheme can be used from different goroutines
 
 ## Unable to process loop value Circular reference not supported TODO
+```
 Type a *a
 Var b a
 b = &b
+```
 
 ## install
 ```bash
@@ -54,7 +59,7 @@ Float32 and float64 use the encoding of floating point types in [gob](https://go
 - The complex128 type encodes the virtual real part as a float64 type.
 
 ### String type
-The string type first converts the length of the string to a uint64 type encoding, and then encodes the string byte array itself.
+The string type first converts the length of the string to a uint64 [Varints] type encoding, and then encodes the string byte array itself.
 ### pointer type
 The pointer type determines whether it is nil. If it is nil, it ends with a false value of bool type. If it is not nil, it encodes a bool type true value, then dereferences the pointer and encodes the type after dereferencing.
 ### array and slice types
@@ -66,6 +71,32 @@ All members of a structure are encoded by their type, and non-exported fields ar
 ### Implementing the type of interface
 - The type that implements the encoding package BinaryMarshaler/BinaryUnmarshaler or implements the gob package GobEncoder/GobDecoder interface is encoded with the implementation method.
 - For implementations of the type of gotiny.GoTinySerialize package will be encoded and decoded using the implemented method
+
+## Schemes [Experimental] API would likely to change
+Schemes allow perform data migrations, deserialise data into objects which has slightly different fields than ones, which was used for data serialisation.
+```
+type T1 struct {
+	I      uint32
+	Str    string
+}
+type T2 struct { // different order binary format is different
+    Str    string
+	I      uint32
+}
+func main() {
+    coder1 = gotiny.New(T1{})
+	coder2 = gotiny.New(T2{})
+    schemeJSON := coder1.GetScheme().AsJSON()
+    scheme1, _ := gotiny.SchemeFromJSON(schemeJSON)
+    coder2.SetScheme(scheme1)
+
+    // Encoding part
+    encoded := coder1.Encode(T1{32, "wow"})
+    result := T2{}
+	coder2.Decode(encoded, &result)
+}
+
+```
 
 ## benchmark
 [benchmark](https://github.com/niubaoshu/go_serialization_benchmarks)
