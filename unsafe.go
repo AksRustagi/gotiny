@@ -51,7 +51,6 @@ func getUnsafePointer(rv *reflect.Value) unsafe.Pointer {
 	vv := (*refVal)(unsafe.Pointer(rv))
 	if vv.flag&flagIndir == 0 {
 		return unsafe.Pointer(&vv.ptr)
-	} else {
-		return vv.ptr
 	}
+	return vv.ptr
 }

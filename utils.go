@@ -95,11 +95,13 @@ type binInter interface {
 	encoding.BinaryUnmarshaler
 }
 
-// 只应该由指针来实现该接口
+// GoTinySerializer The interface should only be implemented by a pointer
 type GoTinySerializer interface {
-	// 编码方法，将对象的序列化结果append到入参数并返回，方法不应该修改入参数值原有的值
+	// The encoding method appends the serialization result of the object to the input parameter and returns,
+	// and the method should not modify the original value of the input parameter value.
 	GotinyEncode([]byte) []byte
-	// 解码方法，将入参解码到对象里并返回使用的长度。方法从入参的第0个字节开始使用，并且不应该修改入参中的任何数据
+	// The decoding method decodes the input parameters into the object and returns the length used.
+	// The method starts with the 0th byte of the input parameter and should not modify any data in the input parameter.
 	GotinyDecode([]byte) int
 }
 
@@ -158,22 +160,29 @@ func implementOtherSerializer(rt reflect.Type) (encEng encEng, decEng decEng) {
 }
 
 // rt.kind is reflect.struct
-func getFieldType(rt reflect.Type, baseOff uintptr) (fields []reflect.Type, offs []uintptr) {
+func getFieldType(rt reflect.Type, baseOff uintptr) (names []string, fields []reflect.Type, offs []uintptr) {
 	for i := 0; i < rt.NumField(); i++ {
 		field := rt.Field(i)
+
 		if ignoreField(field) {
 			continue
 		}
 		ft := field.Type
-		if ft.Kind() == reflect.Struct {
+		name := field.Name
+		// Originally I guess there was an optimisation to put embeded structs on the same level
+		// but this optimisation ruins the idea of collecting schema on the encoder building process
+		// plus one function call should not give much performance improvements
+		/*if ft.Kind() == reflect.Struct {
 			if _, engine := implementOtherSerializer(ft); engine == nil {
-				fFields, fOffs := getFieldType(ft, field.Offset+baseOff)
+				fNames, fFields, fOffs := getFieldType(ft, field.Offset+baseOff)
 				fields = append(fields, fFields...)
+				names = append(names, fNames...)
 				offs = append(offs, fOffs...)
 				continue
 			}
-		}
+		}*/
 		fields = append(fields, ft)
+		names = append(names, name)
 		offs = append(offs, field.Offset+baseOff)
 	}
 	return

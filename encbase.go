@@ -1,8 +1,35 @@
 package gotiny
 
 import (
+	"reflect"
 	"time"
 	"unsafe"
+)
+
+type encEng func(*Encoder, unsafe.Pointer) // Encoder
+
+var (
+	encEngines = [...]encEng{
+		reflect.Invalid:       encIgnore,
+		reflect.Bool:          encBool,
+		reflect.Int:           encInt,
+		reflect.Int8:          encInt8,
+		reflect.Int16:         encInt16,
+		reflect.Int32:         encInt32,
+		reflect.Int64:         encInt64,
+		reflect.Uint:          encUint,
+		reflect.Uint8:         encUint8,
+		reflect.Uint16:        encUint16,
+		reflect.Uint32:        encUint32,
+		reflect.Uint64:        encUint64,
+		reflect.Uintptr:       encUintptr,
+		reflect.UnsafePointer: encPointer,
+		reflect.Float32:       encFloat32,
+		reflect.Float64:       encFloat64,
+		reflect.Complex64:     encComplex64,
+		reflect.Complex128:    encComplex128,
+		reflect.String:        encString,
+	}
 )
 
 func (e *Encoder) encBool(v bool) {

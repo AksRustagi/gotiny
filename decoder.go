@@ -15,48 +15,28 @@ type Decoder struct {
 	length  int      //解码器数量
 }
 
+// Unmarshal decodes any object from byte array
+// For performance recommended to create schema first using gotiny.New
 func Unmarshal(buf []byte, is ...interface{}) int {
 	return NewDecoderWithPtr(is...).Decode(buf, is...)
 }
 
+// NewDecoderWithPtr creates decoder using pointer
+// Note: decoder is not threadsafe, use gotiny.NewWithPtr instead
 func NewDecoderWithPtr(is ...interface{}) *Decoder {
-	l := len(is)
-	engines := make([]decEng, l)
-	for i := 0; i < l; i++ {
-		rt := reflect.TypeOf(is[i])
-		if rt.Kind() != reflect.Ptr {
-			panic("must a pointer type!")
-		}
-		engines[i] = getDecEngine(rt.Elem())
-	}
-	return &Decoder{
-		length:  l,
-		engines: engines,
-	}
+	return NewWithPtr(is...).GetDecoder()
 }
 
+// NewDecoder creates decoder using element of object type
+// Note: decoder is not threadsafe, use gotiny.New instead
 func NewDecoder(is ...interface{}) *Decoder {
-	l := len(is)
-	engines := make([]decEng, l)
-	for i := 0; i < l; i++ {
-		engines[i] = getDecEngine(reflect.TypeOf(is[i]))
-	}
-	return &Decoder{
-		length:  l,
-		engines: engines,
-	}
+	return New(is...).GetDecoder()
 }
 
+// NewDecoderWithType creates decoder using reflect.Type
+// Note: decoder is not threadsafe, use gotiny.NewWithType instead
 func NewDecoderWithType(ts ...reflect.Type) *Decoder {
-	l := len(ts)
-	des := make([]decEng, l)
-	for i := 0; i < l; i++ {
-		des[i] = getDecEngine(ts[i])
-	}
-	return &Decoder{
-		length:  l,
-		engines: des,
-	}
+	return NewWithType(ts...).GetDecoder()
 }
 
 func (d *Decoder) reset() int {
@@ -67,7 +47,7 @@ func (d *Decoder) reset() int {
 	return index
 }
 
-// is is pointer of variable
+// Decode decode to buffer; is is pointer of variable
 func (d *Decoder) Decode(buf []byte, is ...interface{}) int {
 	d.buf = buf
 	engines := d.engines
@@ -77,7 +57,7 @@ func (d *Decoder) Decode(buf []byte, is ...interface{}) int {
 	return d.reset()
 }
 
-// ps is a unsafe.Pointer of the variable
+// DecodePtr decode to pointer; ps is a unsafe.Pointer of the variable
 func (d *Decoder) DecodePtr(buf []byte, ps ...unsafe.Pointer) int {
 	d.buf = buf
 	engines := d.engines
@@ -87,6 +67,7 @@ func (d *Decoder) DecodePtr(buf []byte, ps ...unsafe.Pointer) int {
 	return d.reset()
 }
 
+// DecodeValue decode to value
 func (d *Decoder) DecodeValue(buf []byte, vs ...reflect.Value) int {
 	d.buf = buf
 	engines := d.engines

@@ -1,8 +1,37 @@
 package gotiny
 
 import (
+	"reflect"
+	"sync"
 	"time"
 	"unsafe"
+)
+
+type decEng func(*Decoder, unsafe.Pointer) // 解码器
+
+var (
+	decEngines = []decEng{
+		reflect.Invalid:       decIgnore,
+		reflect.Bool:          decBool,
+		reflect.Int:           decInt,
+		reflect.Int8:          decInt8,
+		reflect.Int16:         decInt16,
+		reflect.Int32:         decInt32,
+		reflect.Int64:         decInt64,
+		reflect.Uint:          decUint,
+		reflect.Uint8:         decUint8,
+		reflect.Uint16:        decUint16,
+		reflect.Uint32:        decUint32,
+		reflect.Uint64:        decUint64,
+		reflect.Uintptr:       decUintptr,
+		reflect.UnsafePointer: decPointer,
+		reflect.Float32:       decFloat32,
+		reflect.Float64:       decFloat64,
+		reflect.Complex64:     decComplex64,
+		reflect.Complex128:    decComplex128,
+		reflect.String:        decString,
+	}
+	decLock sync.RWMutex
 )
 
 func (d *Decoder) decBool() (b bool) {
@@ -158,4 +187,19 @@ func decBytes(d *Decoder, p unsafe.Pointer) {
 	} else if !isNil(p) {
 		*bytes = nil
 	}
+}
+
+func skipUint64(d *Decoder, p unsafe.Pointer)     { d.decUint64() }
+func skipUint32(d *Decoder, p unsafe.Pointer)     { d.decUint32() }
+func skipUint16(d *Decoder, p unsafe.Pointer)     { d.decUint16() }
+func skipByte(d *Decoder, p unsafe.Pointer)       { d.index++ }
+func skipComplex128(d *Decoder, p unsafe.Pointer) { d.decUint64(); d.decUint64() }
+func skipBytes(d *Decoder, p unsafe.Pointer) {
+	if d.decIsNotNil() {
+		l := int(d.decUint32())
+		d.index += l
+	}
+}
+func skipPanic(d *Decoder, p unsafe.Pointer) {
+	panic("this type is unsupported")
 }

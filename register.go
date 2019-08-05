@@ -10,9 +10,12 @@ var (
 	name2type = map[string]reflect.Type{}
 )
 
+// GetName returns string representation of object type
 func GetName(obj interface{}) string {
 	return GetNameByType(reflect.TypeOf(obj))
 }
+
+// GetNameByType returns string representation of object type using reflect.Type
 func GetNameByType(rt reflect.Type) string {
 	return string(getName([]byte(nil), rt))
 }
@@ -21,7 +24,7 @@ func getName(prefix []byte, rt reflect.Type) []byte {
 	if rt == nil || rt.Kind() == reflect.Invalid {
 		return append(prefix, []byte("<nil>")...)
 	}
-	if rt.Name() == "" { //未命名的，组合类型
+	if rt.Name() == "" { // Unnamed, combination type
 		switch rt.Kind() {
 		case reflect.Ptr:
 			return getName(append(prefix, '*'), rt.Elem())
@@ -108,11 +111,11 @@ func getName(prefix []byte, rt reflect.Type) []byte {
 func getNameOfType(rt reflect.Type) string {
 	if name, has := type2name[rt]; has {
 		return name
-	} else {
-		return registerType(rt)
 	}
+	return registerType(rt)
 }
 
+// Register allow to add type so system will be encode and decode it from interface{}
 func Register(i interface{}) string {
 	return registerType(reflect.TypeOf(i))
 }
@@ -123,6 +126,7 @@ func registerType(rt reflect.Type) string {
 	return name
 }
 
+// RegisterName allow to register type with name provided
 func RegisterName(name string, rt reflect.Type) {
 	if name == "" {
 		panic("attempt to register empty name")

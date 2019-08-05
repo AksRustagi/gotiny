@@ -14,18 +14,27 @@ var (
 	value = genA()
 	e     *Encoder
 	d     *Decoder
+	c     *Coder
 )
 
 func init() {
 	t := reflect.TypeOf(value).Elem()
 	e = NewEncoderWithType(t)
 	d = NewDecoderWithType(t)
+	c = NewWithType(t)
 	buf = e.Encode(value)
 }
 
 func BenchmarkEncode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Marshal(value)
+	}
+}
+
+func BenchmarkSchemeEncode(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		scheme := NewWithPtr(value)
+		scheme.Encode(value)
 	}
 }
 
@@ -38,6 +47,12 @@ func BenchmarkDecode(b *testing.B) {
 func BenchmarkEncode2(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		e.Encode(value)
+	}
+}
+
+func BenchmarkSchemeEncode2(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		c.Encode(value)
 	}
 }
 
