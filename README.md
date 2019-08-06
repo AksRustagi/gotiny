@@ -4,7 +4,7 @@
 Gotiny is an efficiency-oriented go language serialization library. Gotiny improves efficiency by pre-generating the encoder and reducing the use of the reflect library, almost as fast as the serialization library that generates the code.
 
 ## hello word
-```
+```Go
 package main
 import (
    "fmt"
@@ -33,7 +33,7 @@ func main() {
 – Threadsafe, once created scheme can be used from different goroutines
 
 ## Unable to process loop value Circular reference not supported TODO
-```
+```Go
 Type a *a
 Var b a
 b = &b
@@ -74,7 +74,7 @@ All members of a structure are encoded by their type, and non-exported fields ar
 
 ## Schemes [Experimental] API would likely to change
 Schemes allow perform data migrations, deserialise data into objects which has slightly different fields than ones, which was used for data serialisation.
-```
+```Go
 type T1 struct {
 	I      uint32
 	Str    string
@@ -85,7 +85,7 @@ type T2 struct { // different order binary format is different
 }
 func main() {
     coder1 = gotiny.New(T1{})
-	coder2 = gotiny.New(T2{})
+    coder2 = gotiny.New(T2{})
     schemeJSON := coder1.GetScheme().AsJSON()
     scheme1, _ := gotiny.SchemeFromJSON(schemeJSON)
     coder2.SetScheme(scheme1)
@@ -93,9 +93,8 @@ func main() {
     // Encoding part
     encoded := coder1.Encode(T1{32, "wow"})
     result := T2{}
-	coder2.Decode(encoded, &result)
+    coder2.Decode(encoded, &result)
 }
-
 ```
 
 ## benchmark
